@@ -1,7 +1,7 @@
 // src/App.tsx
 import { ThemeProvider } from "./theme/ThemeProvider";
 import {
-  BrowserRouter as Router,
+  HashRouter as Router, // Использование HashRouter для корректной маршрутизации на GitHub Pages
   Routes,
   Route,
   Navigate,
@@ -20,19 +20,23 @@ function App() {
       <Router>
         <MainLayout>
           <Routes>
-            <Route
-              path="/Yota-X-admin/"
-              element={<Navigate to="/dashboard" replace />}
-            />
-            {/* <Route path="/dashboard" element={<Dashboard />} />{" "} */}
-            {/* Добавьте компонент Dashboard */}
+            {/* Перенаправление с корня на Dashboard */}
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+
+            {/* Пример добавления Dashboard маршрута */}
+            {/* <Route path="/dashboard" element={<Dashboard />} /> */}
+
+            {/* Маршруты для статей */}
             <Route path="/articles" element={<ArticlesList />} />
             <Route path="/articles/create" element={<ArticleForm />} />
             <Route path="/articles/edit/:slug" element={<ArticleForm />} />
+
+            {/* Маршруты для позиций */}
             <Route path="/positions" element={<PositionsList />} />
             <Route path="/positions/new" element={<PositionForm />} />
             <Route path="/positions/:id" element={<PositionDetails />} />
             <Route path="/positions/:id/edit" element={<PositionForm />} />
+
             {/* Добавьте другие маршруты здесь */}
           </Routes>
         </MainLayout>
