@@ -42,11 +42,15 @@ jobs:
       - name: Install Dependencies
         run: npm install
 
-      # Шаг 5: Сборка проекта
+      # Шаг 5: Создание `.env` файла с переменной окружения
+      - name: Set Environment Variables
+        run: echo "VITE_API_URL=${{ secrets.VITE_API_URL }}" >> .env
+
+      # Шаг 6: Сборка проекта
       - name: Build Project
         run: npm run build
 
-      # Шаг 6: Деплой на GitHub Pages
+      # Шаг 7: Деплой на GitHub Pages
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:

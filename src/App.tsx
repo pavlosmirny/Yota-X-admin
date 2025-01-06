@@ -1,6 +1,7 @@
+// src/App.tsx
 import { ThemeProvider } from "./theme/ThemeProvider";
 import {
-  HashRouter as Router, // Изменено с BrowserRouter на HashRouter
+  BrowserRouter as Router,
   Routes,
   Route,
   Navigate,
@@ -19,7 +20,10 @@ function App() {
       <Router>
         <MainLayout>
           <Routes>
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            <Route
+              path="/Yota-X-admin/"
+              element={<Navigate to="/dashboard" replace />}
+            />
             {/* <Route path="/dashboard" element={<Dashboard />} />{" "} */}
             {/* Добавьте компонент Dashboard */}
             <Route path="/articles" element={<ArticlesList />} />

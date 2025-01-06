@@ -72,7 +72,8 @@ export interface TagViews {
 }
 
 // API Configuration
-const API_URL = "http://localhost:5002/api/v1";
+const API_URL = import.meta.env.VITE_API_URL;
+console.log(API_URL);
 
 const api = axios.create({
   baseURL: API_URL,
