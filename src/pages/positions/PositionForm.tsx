@@ -79,7 +79,7 @@ export const PositionForm: React.FC = () => {
           const { data } = await positionsApi.getPosition(id);
           const transformedData = transformPosition(data);
 
-          // Заполняем форму данными
+          // Заполняем форму
           Object.keys(transformedData).forEach((key) => {
             if (key !== "id") {
               setValue(
