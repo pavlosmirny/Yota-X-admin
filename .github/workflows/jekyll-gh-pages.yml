@@ -1,9 +1,13 @@
+# .github/workflows/deploy.yml
+
 name: Deploy React App to GitHub Pages
 
 on:
   push:
     branches:
       - main # Укажите вашу основную ветку
+
+  workflow_dispatch:
 
 jobs:
   build-and-deploy:
@@ -14,21 +18,30 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      # Шаг 2: Установка Node.js
+      # Шаг 2: Установка Node.js версии 18
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: "16" # Укажите версию Node.js, совместимую с вашим проектом
+          node-version: "18" # Обновлено на Node.js 18
 
-      # Шаг 3: Установка зависимостей
+      # Шаг 3: Кеширование зависимостей для ускорения сборки
+      - name: Cache Node.js modules
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      # Шаг 4: Установка зависимостей
       - name: Install Dependencies
         run: npm install
 
-      # Шаг 4: Сборка проекта
+      # Шаг 5: Сборка проекта
       - name: Build Project
         run: npm run build
 
-      # Шаг 5: Деплой на GitHub Pages
+      # Шаг 6: Деплой на GitHub Pages
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
