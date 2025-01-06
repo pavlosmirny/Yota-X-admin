@@ -20,6 +20,9 @@ import {
 } from "@mui/icons-material";
 import { useTheme as useCustomTheme } from "../../hooks/useTheme";
 
+// Импортируйте логотип
+import logo from "../../assets/vite.jpg"; // Убедитесь, что путь корректный
+
 interface HeaderProps {
   handleDrawerToggle: () => void;
 }
@@ -59,8 +62,20 @@ export const Header = ({ handleDrawerToggle }: HeaderProps) => {
             <MenuIcon />
           </IconButton>
         )}
+
+        {/* Добавьте Box для логотипа */}
+        <Box
+          component="img"
+          src={logo}
+          alt="Yota-X Logo"
+          sx={{
+            height: 40, // Настройте размер логотипа
+            mr: 2, // Отступ справа от логотипа
+          }}
+        />
+
         <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-          Company Name
+          Yota-X Admin Panel
         </Typography>
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           <IconButton onClick={toggleTheme} color="inherit">
