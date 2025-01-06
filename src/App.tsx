@@ -1,7 +1,6 @@
-// src/App.tsx
 import { ThemeProvider } from "./theme/ThemeProvider";
 import {
-  BrowserRouter as Router,
+  HashRouter as Router, // Изменено с BrowserRouter на HashRouter
   Routes,
   Route,
   Navigate,
