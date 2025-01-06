@@ -59,15 +59,15 @@ export const ArticlesList = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down("sm")); // true для экранов < 600px
 
   // Функция для генерации цвета на основе строки
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const stringToColor = (str: string) => {
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-      hash = str.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    const hue = Math.abs(hash % 360);
-    return `hsl(${hue}, 65%, 45%)`;
-  };
+
+  //   const stringToColor = (str: string) => {
+  //     let hash = 0;
+  //     for (let i = 0; i < str.length; i++) {
+  //       hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  //     }
+  //     const hue = Math.abs(hash % 360);
+  //     return `hsl(${hue}, 65%, 45%)`;
+  //   };
 
   // Функция для загрузки статей
   const fetchArticles = async () => {

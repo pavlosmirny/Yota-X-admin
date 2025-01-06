@@ -1,6 +1,7 @@
 // src/components/positions/PositionForm.tsx
+
 import React from "react";
-import { useForm, Controller } from "react-hook-form";
+import { useForm, Controller, SubmitHandler } from "react-hook-form";
 import { useNavigate, useParams } from "react-router-dom";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
@@ -31,22 +32,24 @@ import {
 } from "../../constants/positions";
 
 // Схема валидации
-const validationSchema = yup.object({
-  title: yup.string().required("Title is required"),
-  department: yup.string().required("Department is required"),
-  type: yup.string().required("Employment type is required"),
-  location: yup.string().required("Location is required"),
-  experience: yup.string().required("Experience is required"),
-  description: yup.string().required("Description is required"),
-  requirements: yup
-    .array()
-    .of(yup.string())
-    .min(1, "At least one requirement is required")
-    .required("Requirements are required"),
-});
+const validationSchema: yup.ObjectSchema<CreatePositionDto> = yup
+  .object({
+    title: yup.string().required("Title is required"),
+    department: yup.string().required("Department is required"),
+    type: yup.string().required("Employment type is required"),
+    location: yup.string().required("Location is required"),
+    experience: yup.string().required("Experience is required"),
+    description: yup.string().required("Description is required"),
+    requirements: yup
+      .array()
+      .of(yup.string().required("Each requirement is required"))
+      .min(1, "At least one requirement is required")
+      .required("Requirements are required"),
+  })
+  .required();
 
-export const PositionForm: React.FC = () => {
-  const { id } = useParams();
+const PositionForm: React.FC = () => {
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [error, setError] = React.useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
@@ -81,7 +84,7 @@ export const PositionForm: React.FC = () => {
 
           // Заполняем форму
           Object.keys(transformedData).forEach((key) => {
-            if (key !== "id") {
+            if (key !== "id" && key in validationSchema.fields) {
               setValue(
                 key as keyof CreatePositionDto,
                 transformedData[key as keyof typeof transformedData]
@@ -103,11 +106,9 @@ export const PositionForm: React.FC = () => {
   const requirements = watch("requirements");
 
   const handleAddRequirement = () => {
-    if (
-      newRequirement.trim() &&
-      !requirements.includes(newRequirement.trim())
-    ) {
-      setValue("requirements", [...requirements, newRequirement.trim()]);
+    const trimmedRequirement = newRequirement.trim();
+    if (trimmedRequirement && !requirements.includes(trimmedRequirement)) {
+      setValue("requirements", [...requirements, trimmedRequirement]);
       setNewRequirement("");
     }
   };
@@ -120,26 +121,15 @@ export const PositionForm: React.FC = () => {
   };
 
   // Отправка формы
-  const onSubmit = async (data: CreatePositionDto) => {
+  const onSubmit: SubmitHandler<CreatePositionDto> = async (data) => {
     setIsSubmitting(true);
     setError(null);
 
     try {
-      // Подготавливаем данные для отправки
-      const formattedData = {
-        title: data.title,
-        department: data.department,
-        type: data.type,
-        location: data.location,
-        experience: data.experience,
-        description: data.description,
-        requirements: data.requirements,
-      };
-
       if (isEdit) {
-        await positionsApi.updatePosition(id!, formattedData);
+        await positionsApi.updatePosition(id!, data);
       } else {
-        await positionsApi.createPosition(formattedData);
+        await positionsApi.createPosition(data);
       }
       navigate("/positions");
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -159,14 +149,14 @@ export const PositionForm: React.FC = () => {
     <Paper sx={{ p: 3 }}>
       <Box component="form" onSubmit={handleSubmit(onSubmit)}>
         <Stack spacing={3}>
-          {/* Header */}
+          {/* Заголовок */}
           <Typography variant="h5">
             {isEdit ? "Edit Position" : "Create Position"}
           </Typography>
 
-          {/* Basic Information */}
+          {/* Основная информация */}
           <Grid container spacing={3}>
-            {/* Title */}
+            {/* Название должности */}
             <Grid item xs={12}>
               <Controller
                 name="title"
@@ -183,7 +173,7 @@ export const PositionForm: React.FC = () => {
               />
             </Grid>
 
-            {/* Department */}
+            {/* Отдел */}
             <Grid item xs={12} md={4}>
               <Controller
                 name="department"
@@ -207,7 +197,7 @@ export const PositionForm: React.FC = () => {
               />
             </Grid>
 
-            {/* Employment Type */}
+            {/* Тип занятости */}
             <Grid item xs={12} md={4}>
               <Controller
                 name="type"
@@ -231,7 +221,7 @@ export const PositionForm: React.FC = () => {
               />
             </Grid>
 
-            {/* Location */}
+            {/* Локация */}
             <Grid item xs={12} md={4}>
               <Controller
                 name="location"
@@ -255,7 +245,7 @@ export const PositionForm: React.FC = () => {
               />
             </Grid>
 
-            {/* Experience */}
+            {/* Требуемый опыт */}
             <Grid item xs={12}>
               <Controller
                 name="experience"
@@ -279,7 +269,7 @@ export const PositionForm: React.FC = () => {
               />
             </Grid>
 
-            {/* Description */}
+            {/* Описание */}
             <Grid item xs={12}>
               <Controller
                 name="description"
@@ -298,7 +288,7 @@ export const PositionForm: React.FC = () => {
               />
             </Grid>
 
-            {/* Requirements */}
+            {/* Требования */}
             <Grid item xs={12}>
               <Typography variant="subtitle1" gutterBottom>
                 Requirements
@@ -342,7 +332,7 @@ export const PositionForm: React.FC = () => {
             </Grid>
           </Grid>
 
-          {/* Form Actions */}
+          {/* Действия формы */}
           <Box sx={{ display: "flex", gap: 2, justifyContent: "flex-end" }}>
             <Button
               variant="outlined"
@@ -362,6 +352,7 @@ export const PositionForm: React.FC = () => {
         </Stack>
       </Box>
 
+      {/* Сообщение об ошибке */}
       <Snackbar
         open={!!error}
         autoHideDuration={6000}

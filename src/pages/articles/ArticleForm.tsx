@@ -68,8 +68,8 @@ export const ArticleForm = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [availableTags, setAvailableTags] = useState<TagOption[]>([]);
+
+  const [, setAvailableTags] = useState<TagOption[]>([]);
 
   const {
     control,
