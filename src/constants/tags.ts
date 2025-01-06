@@ -1,0 +1,23 @@
+// src/constants/tags.ts
+export const PREDEFINED_TAGS = [
+  "React",
+  "React Native",
+  "Next.js",
+  "FullStack",
+  "Node.js",
+  "TypeScript",
+  "JavaScript",
+  "Python",
+  "Docker",
+  "Kubernetes",
+  "AWS",
+  "MongoDB",
+  "PostgreSQL",
+  "Redis",
+  "GraphQL",
+  "REST API",
+  "CI/CD",
+  "Testing",
+  "Performance",
+  "Web Development",
+] as const;
