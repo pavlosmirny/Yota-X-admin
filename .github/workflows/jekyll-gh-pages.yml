@@ -9,6 +9,11 @@ on:
 
   workflow_dispatch:
 
+permissions:
+  contents: write # Обновлено для предоставления прав на запись
+  pages: write
+  id-token: write
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
