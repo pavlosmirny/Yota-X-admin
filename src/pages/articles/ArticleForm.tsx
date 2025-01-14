@@ -1,6 +1,9 @@
-// src/pages/articles/ArticleForm.tsx
+// src/components/articles/ArticleForm.tsx
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css";
+import DOMPurify from "dompurify";
 import {
   Box,
   Paper,
@@ -17,12 +20,38 @@ import {
   CircularProgress,
   InputAdornment,
   alpha,
+  MenuItem,
+  styled,
 } from "@mui/material";
 import { LoadingButton } from "@mui/lab";
 import { useForm, Controller } from "react-hook-form";
-import { articlesApi } from "../../services/api";
-import type { CreateArticleDto } from "../../services/api";
+import { PREDEFINED_CATEGORIES } from "../../constants/categories";
+import { articlesApi, CreateArticleDto } from "../../services/api";
 import { PREDEFINED_TAGS } from "../../constants/tags";
+
+// Стилизованный компонент для ReactQuill
+const StyledQuillWrapper = styled(Box)(({ theme }) => ({
+  "& .ql-container": {
+    borderBottomLeftRadius: theme.shape.borderRadius,
+    borderBottomRightRadius: theme.shape.borderRadius,
+    backgroundColor: theme.palette.background.paper,
+  },
+  "& .ql-toolbar": {
+    borderTopLeftRadius: theme.shape.borderRadius,
+    borderTopRightRadius: theme.shape.borderRadius,
+    backgroundColor: theme.palette.background.default,
+  },
+  "& .ql-editor": {
+    minHeight: "400px",
+    fontSize: "1rem",
+    lineHeight: 1.75,
+    padding: theme.spacing(2),
+    "&.ql-blank::before": {
+      color: theme.palette.text.secondary,
+      fontStyle: "normal",
+    },
+  },
+}));
 
 // Генерация цвета на основе строки
 const stringToColor = (str: string) => {
@@ -34,7 +63,39 @@ const stringToColor = (str: string) => {
   return `hsl(${hue}, 65%, 45%)`;
 };
 
+const QUILL_MODULES = {
+  toolbar: [
+    [{ header: [1, 2, 3, 4, 5, 6, false] }],
+    ["bold", "italic", "underline", "strike"],
+    [{ color: [] }, { background: [] }],
+    [{ list: "ordered" }, { list: "bullet" }],
+    [{ align: [] }],
+    ["link", "image", "video"],
+    ["blockquote", "code-block"],
+    ["clean"],
+  ],
+};
+
+const QUILL_FORMATS = [
+  "header",
+  "bold",
+  "italic",
+  "underline",
+  "strike",
+  "color",
+  "background",
+  "list",
+  "bullet",
+  "align",
+  "link",
+  "image",
+  "video",
+  "blockquote",
+  "code-block",
+];
+
 type ArticleFormData = CreateArticleDto & {
+  category: (typeof PREDEFINED_CATEGORIES)[number];
   seo: {
     metaTitle: string;
     metaDescription: string;
@@ -48,6 +109,7 @@ const defaultValues: ArticleFormData = {
   content: "",
   description: "",
   tags: [],
+  category: PREDEFINED_CATEGORIES[0],
   author: "",
   published: false,
   imageUrl: "",
@@ -58,18 +120,12 @@ const defaultValues: ArticleFormData = {
   },
 };
 
-interface TagOption {
-  tag: string;
-  count: number;
-}
-
 export const ArticleForm = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const [, setAvailableTags] = useState<TagOption[]>([]);
+  // const [uploadingImage, setUploadingImage] = useState(false);
 
   const {
     control,
@@ -96,19 +152,6 @@ export const ArticleForm = () => {
     }
   }, [title, setValue, slug]);
 
-  // Загрузка тегов
-  useEffect(() => {
-    const fetchTags = async () => {
-      try {
-        const response = await articlesApi.getTagsWithCount();
-        setAvailableTags(response.data);
-      } catch (error) {
-        console.error("Error fetching tags:", error);
-      }
-    };
-    fetchTags();
-  }, []);
-
   // Загрузка статьи для редактирования
   useEffect(() => {
     const fetchArticle = async () => {
@@ -116,16 +159,16 @@ export const ArticleForm = () => {
 
       try {
         setLoading(true);
-        setError(null);
         const response = await articlesApi.getArticle(slug);
         const article = response.data;
 
-        const formData: ArticleFormData = {
+        reset({
           title: article.title,
           slug: article.slug,
           content: article.content,
           description: article.description,
           tags: article.tags,
+          category: article.category,
           author: article.author,
           published: article.published,
           imageUrl: article.imageUrl || "",
@@ -134,9 +177,7 @@ export const ArticleForm = () => {
             metaDescription: article.seo.metaDescription,
             metaKeywords: article.seo.metaKeywords,
           },
-        };
-
-        reset(formData);
+        });
       } catch (error) {
         setError("Failed to load article");
         console.error("Error fetching article:", error);
@@ -151,10 +192,18 @@ export const ArticleForm = () => {
   const onSubmit = async (data: ArticleFormData) => {
     try {
       setError(null);
+      const sanitizedContent = DOMPurify.sanitize(data.content);
+
       if (slug) {
-        await articlesApi.updateArticle(slug, data);
+        await articlesApi.updateArticle(slug, {
+          ...data,
+          content: sanitizedContent,
+        });
       } else {
-        await articlesApi.createArticle(data);
+        await articlesApi.createArticle({
+          ...data,
+          content: sanitizedContent,
+        });
       }
       navigate("/articles");
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -178,35 +227,13 @@ export const ArticleForm = () => {
   }
 
   return (
-    <Paper
-      elevation={3}
-      sx={{
-        p: 4,
-        width: "100%",
-        bgcolor: "background.paper",
-        borderRadius: 2,
-      }}
-    >
-      <Typography
-        variant="h5"
-        component="h1"
-        sx={{
-          fontWeight: 600,
-          mb: 3,
-          color: "text.primary",
-        }}
-      >
+    <Paper elevation={3} sx={{ p: 4, width: "100%", borderRadius: 2 }}>
+      <Typography variant="h5" component="h1" sx={{ fontWeight: 600, mb: 3 }}>
         {slug ? "Edit Article" : "Create New Article"}
       </Typography>
 
       {error && (
-        <Alert
-          severity="error"
-          sx={{
-            mb: 3,
-            borderRadius: 1,
-          }}
-        >
+        <Alert severity="error" sx={{ mb: 3, borderRadius: 1 }}>
           {error}
         </Alert>
       )}
@@ -215,14 +242,7 @@ export const ArticleForm = () => {
         <Stack spacing={4}>
           {/* Basic Information */}
           <Box>
-            <Typography
-              variant="h6"
-              sx={{
-                fontWeight: 500,
-                mb: 2,
-                color: "text.primary",
-              }}
-            >
+            <Typography variant="h6" sx={{ fontWeight: 500, mb: 2 }}>
               Basic Information
             </Typography>
             <Stack spacing={3}>
@@ -238,6 +258,28 @@ export const ArticleForm = () => {
                     helperText={errors.title?.message}
                     fullWidth
                   />
+                )}
+              />
+
+              <Controller
+                name="category"
+                control={control}
+                rules={{ required: "Category is required" }}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    select
+                    label="Category"
+                    error={!!errors.category}
+                    helperText={errors.category?.message}
+                    fullWidth
+                  >
+                    {PREDEFINED_CATEGORIES.map((category) => (
+                      <MenuItem key={category} value={category}>
+                        {category}
+                      </MenuItem>
+                    ))}
+                  </TextField>
                 )}
               />
 
@@ -285,15 +327,24 @@ export const ArticleForm = () => {
                 control={control}
                 rules={{ required: "Content is required" }}
                 render={({ field }) => (
-                  <TextField
-                    {...field}
-                    label="Content"
-                    multiline
-                    rows={12}
-                    error={!!errors.content}
-                    helperText={errors.content?.message}
-                    fullWidth
-                  />
+                  <StyledQuillWrapper>
+                    <ReactQuill
+                      {...field}
+                      theme="snow"
+                      modules={QUILL_MODULES}
+                      formats={QUILL_FORMATS}
+                      placeholder="Write your article content here..."
+                    />
+                    {errors.content && (
+                      <Typography
+                        color="error"
+                        variant="caption"
+                        sx={{ mt: 1 }}
+                      >
+                        {errors.content.message}
+                      </Typography>
+                    )}
+                  </StyledQuillWrapper>
                 )}
               />
             </Stack>
@@ -303,14 +354,7 @@ export const ArticleForm = () => {
 
           {/* Meta Information */}
           <Box>
-            <Typography
-              variant="h6"
-              sx={{
-                fontWeight: 500,
-                mb: 2,
-                color: "text.primary",
-              }}
-            >
+            <Typography variant="h6" sx={{ fontWeight: 500, mb: 2 }}>
               Meta Information
             </Typography>
             <Stack spacing={3}>
@@ -390,14 +434,7 @@ export const ArticleForm = () => {
 
           {/* SEO Section */}
           <Box>
-            <Typography
-              variant="h6"
-              sx={{
-                fontWeight: 500,
-                mb: 2,
-                color: "text.primary",
-              }}
-            >
+            <Typography variant="h6" sx={{ fontWeight: 500, mb: 2 }}>
               SEO
             </Typography>
             <Stack spacing={3}>
@@ -496,12 +533,7 @@ export const ArticleForm = () => {
                     />
                   }
                   label={
-                    <Typography
-                      sx={{
-                        fontWeight: 500,
-                        color: "text.primary",
-                      }}
-                    >
+                    <Typography sx={{ fontWeight: 500 }}>
                       Publish article
                     </Typography>
                   }
@@ -512,12 +544,7 @@ export const ArticleForm = () => {
 
           {/* Form Actions */}
           <Box
-            sx={{
-              display: "flex",
-              gap: 2,
-              justifyContent: "flex-end",
-              pt: 2,
-            }}
+            sx={{ display: "flex", gap: 2, justifyContent: "flex-end", pt: 2 }}
           >
             <Button
               variant="outlined"

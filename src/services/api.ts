@@ -10,6 +10,17 @@ export interface SeoMetadata {
 }
 
 export interface ServerArticle {
+  category:
+    | "Frontend Development"
+    | "Backend Development"
+    | "DevOps"
+    | "Web Design"
+    | "Mobile Development"
+    | "Cloud Computing"
+    | "Database"
+    | "Security"
+    | "Best Practices"
+    | "Architecture";
   _id: string;
   title: string;
   slug: string;
@@ -74,6 +85,7 @@ export interface TagViews {
 // API Configuration
 // const API_URL = import.meta.env.VITE_API_URL;
 const API_URL = "https://yota-x-backend.onrender.com/api/v1";
+// const API_URL = "http://localhost:5002/api/v1";
 console.log(API_URL);
 
 const api = axios.create({
